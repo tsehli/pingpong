@@ -9,7 +9,7 @@ const WINDOW_HEIGHT = 600;
 const FPS = 60;
 const DELTA_TIME_SEC: f32 = 1.0 / @as(f32, FPS);
 const BALL_SIZE = 15;
-const BALL_SPEED: f32 = 500;
+const BALL_SPEED: f32 = 300;
 const BAR_LEN: f32 = 100;
 const BAR_THICKNESS: f32 = 10;
 const BAR_Y: f32 = WINDOW_HEIGHT - BAR_THICKNESS - 100;
@@ -91,10 +91,26 @@ pub fn main() !void {
 
         bar_x += bar_dx * BAR_SPEED * DELTA_TIME_SEC;
 
+        if (bar_x + BAR_LEN > WINDOW_WIDTH) {
+            bar_x = WINDOW_WIDTH - BAR_LEN;
+        }
+
+        if (bar_x < 0) {
+            bar_x = 0;
+        }
+
         var ball_next_pos = Point{
             .x = ball_pos.x + ball_vel.x * BALL_SPEED * DELTA_TIME_SEC,
             .y = ball_pos.y + ball_vel.y * BALL_SPEED * DELTA_TIME_SEC,
         };
+
+        // intersection with bar (approximate)
+        if (ball_next_pos.x + BALL_SIZE >= bar_x and ball_next_pos.x - BALL_SIZE < bar_x + BAR_LEN) {
+            if (ball_pos.y + BALL_SIZE >= BAR_Y) {
+                ball_vel.y *= -1;
+                ball_next_pos.y = ball_pos.y + ball_vel.y * BALL_SPEED * DELTA_TIME_SEC;
+            }
+        }
 
         if (ball_next_pos.x < BALL_SIZE or ball_next_pos.x + BALL_SIZE > WINDOW_WIDTH) {
             ball_vel.x *= -1;
