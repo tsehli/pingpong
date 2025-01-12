@@ -9,7 +9,7 @@ const WINDOW_HEIGHT = 600;
 const FPS = 60;
 const DELTA_TIME_SEC: f32 = 1.0 / @as(f32, FPS);
 const BALL_SIZE = 15;
-const BALL_SPEED: f32 = 300;
+const BALL_SPEED: f32 = 400;
 const BAR_LEN: f32 = 100;
 const BAR_THICKNESS: f32 = 10;
 const BAR_Y: f32 = WINDOW_HEIGHT - BAR_THICKNESS - 100;
@@ -75,7 +75,10 @@ pub fn main() !void {
             }
         }
 
-        if (pause) continue;
+        if (pause) {
+            c.SDL_Delay(1000 / FPS);
+            continue;
+        }
 
         bar_dx = 0;
         if (keyboard[c.SDL_SCANCODE_LEFT] != 0) {
@@ -98,6 +101,13 @@ pub fn main() !void {
         if (bar_x < 0) {
             bar_x = 0;
         }
+        const bar_y: f32 = BAR_Y - BAR_THICKNESS / 2;
+        const bar_rect = c.SDL_Rect{
+            .x = @intFromFloat(bar_x),
+            .y = BAR_Y - BAR_THICKNESS / 2,
+            .w = BAR_LEN,
+            .h = BAR_THICKNESS,
+        };
 
         var ball_next_pos = Point{
             .x = ball_pos.x + ball_vel.x * BALL_SPEED * DELTA_TIME_SEC,
@@ -105,8 +115,8 @@ pub fn main() !void {
         };
 
         // intersection with bar (approximate)
-        if (ball_next_pos.x + BALL_SIZE >= bar_x and ball_next_pos.x - BALL_SIZE < bar_x + BAR_LEN) {
-            if (ball_pos.y + BALL_SIZE >= BAR_Y) {
+        if (ball_next_pos.x + BALL_SIZE >= bar_x and ball_next_pos.x - BALL_SIZE <= bar_x + BAR_LEN) {
+            if ((ball_pos.y < bar_y and ball_pos.y + BALL_SIZE >= bar_y) or (ball_pos.y > bar_y and ball_pos.y - BALL_SIZE <= bar_y)) {
                 ball_vel.y *= -1;
                 ball_next_pos.y = ball_pos.y + ball_vel.y * BALL_SPEED * DELTA_TIME_SEC;
             }
@@ -122,13 +132,6 @@ pub fn main() !void {
         }
 
         ball_pos = ball_next_pos;
-
-        const bar_rect = c.SDL_Rect{
-            .x = @intFromFloat(bar_x),
-            .y = BAR_Y - BAR_THICKNESS / 2,
-            .w = BAR_LEN,
-            .h = BAR_THICKNESS,
-        };
 
         // draw the ball
         _ = c.SDL_SetRenderDrawColor(renderer, 0xFF, 0xFF, 0xFF, 0xFF);
